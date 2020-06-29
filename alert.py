@@ -1,7 +1,9 @@
-import mysql.connector
 import time
+
+import mysql.connector
+
 import crs
-import MLS_comp
+
 
 class DB:
     def __init__(self):
@@ -49,8 +51,8 @@ while True:
     # for potenal muilt threading for when i need to check muiltpule tables at once
     print("select Address from WebsiteARV where id = " + str(id))
     print(num_alert)
-    #sql = "select table_name, data_id, date from alerts where$
-    if num_alert > 1:
+    # sql = "select table_name, data_id, date from alerts where$
+    if num_alert >= 1:
         data_id = database.reads("select data_id from alerts")
         for id in data_id:
             print("select Address from WebsiteARV where id = " + str(id))
@@ -60,15 +62,5 @@ while True:
         for id in data_id:
             del_sql = "delete from WebsiteARV where id = " + str(id)
             database.execute(del_sql)
-    elif num_alert > 0:
-        id = int(database.read("select data_id from alerts"))
-        search_sql = "select Address from WebsiteARV where id = " + str(id)
-        print(id)
-        address = (database.read(search_sql))
-        print(address)
-        property = list(crs.main(address))
-        del_sql = "delete from alerts where data_id = " + str(id)
-        database.execute(del_sql)
-        MLS_comp.main(property)
     else:
         time.sleep(60)
