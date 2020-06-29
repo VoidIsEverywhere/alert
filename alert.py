@@ -1,14 +1,17 @@
-import time
-import re
-import mysql.connector
 import logging
+import re
+import time
+
+import mysql.connector
+
 import crs
 
 LOG_FILENAME = 'alert.log'
-logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+logging.basicConfig(filename=LOG_FILENAME, level=logging.DEBUG)
+
 
 def convertTuple(tup):
-    str =  ''.join(tup)
+    str = ''.join(tup)
     return str
 
 
@@ -51,7 +54,7 @@ def main():
     # sql = "select min(date) from alerts;"
     # time_of_last_check = database.read(sql)
     # sql = "select * from alerts where date > " + str(time_of_last_check) + ";"
-    sql = "select  data_id from alerts"
+    # sql = "select  data_id from alerts"
     while True:
         table_name = []
         address = []
@@ -70,7 +73,9 @@ def main():
                 print("select Address from WebsiteARV where id = " + str(id))
                 search_sql = "select Address from WebsiteARV where id = " + \
                     str(id)
-                address.append(convertTuple(database.reads(search_sql)[0]))
+                addy = convertTuple(database.reads(search_sql)[0])
+                logging.debug('the address returned is: ' + addy)
+                address.append(addy)
             for addy in address:
                 try:
                     crs.search(addy, 1)
