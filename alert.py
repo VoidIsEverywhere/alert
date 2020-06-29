@@ -7,7 +7,9 @@ import crs
 LOG_FILENAME = 'alert.log'
 logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
 
-
+def convertTuple(tup):
+    str =  ''.join(tup)
+    return str
 
 
 class DB:
@@ -68,14 +70,14 @@ def main():
                 print("select Address from WebsiteARV where id = " + str(id))
                 search_sql = "select Address from WebsiteARV where id = " + \
                     str(id)
-                address.append(database.reads(search_sql))
+                address.append(convertTuple(database.reads(search_sql)[0]))
             for addy in address:
                 try:
                     crs.search(addy, 1)
                 except:
                     print("CRS failed for: " + addy)
                     logging.debug("CRS  failed for: " + addy)
-                    countue
+                    continue
                 print("CRS is complete for: " + addy)
                 logging.debug("CRS is complete for: " + addy)
             for id in data_id:
