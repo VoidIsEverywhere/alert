@@ -1,8 +1,13 @@
 import time
-
+import re
 import mysql.connector
-
+import logging
 import crs
+
+LOG_FILENAME = 'alert.log'
+logging.basicConfig(filename=LOG_FILENAME,level=logging.DEBUG)
+
+
 
 
 class DB:
@@ -37,30 +42,51 @@ class DB:
         self.db.commit()
 
 
-database = DB()
-database.connect()
-# for potenal muilt threading for when i need to check muiltpule tables at once
-# sql = "select min(date) from alerts;"
-# time_of_last_check = database.read(sql)
-# sql = "select * from alerts where date > " + str(time_of_last_check) + ";"
-sql = "select  data_id from alerts"
-while True:
-    table_name = []
-    address = []
-    num_alert = int(database.read("select count(*) from alerts;"))
+def main():
+    database = DB()
+    database.connect()
     # for potenal muilt threading for when i need to check muiltpule tables at once
-    print("select Address from WebsiteARV where id = " + str(id))
-    print(num_alert)
-    # sql = "select table_name, data_id, date from alerts where$
-    if num_alert >= 1:
-        data_id = database.reads("select data_id from alerts")
-        for id in data_id:
-            print("select Address from WebsiteARV where id = " + str(id))
-            search_sql = "select Address from WebsiteARV where id = " + str(id)
-            address.append(database.reads(search_sql))
-        crs.main(address)
-        for id in data_id:
-            del_sql = "delete from WebsiteARV where id = " + str(id)
-            database.execute(del_sql)
-    else:
-        time.sleep(60)
+    # sql = "select min(date) from alerts;"
+    # time_of_last_check = database.read(sql)
+    # sql = "select * from alerts where date > " + str(time_of_last_check) + ";"
+    sql = "select  data_id from alerts"
+    while True:
+        table_name = []
+        address = []
+        num_alert = int(database.read("select count(*) from alerts;"))
+        # for potenal muilt threading for when i need to check muiltpule tables at once
+        # print("select Address from WebsiteARV where id = " + str(id))
+        # sql = "select table_name, data_id, date from alerts where$
+        if num_alert >= 1:
+            a_string = str(database.reads("select data_id from alerts"))
+            data_id = [int(x) for x in re.findall(
+                '\d+', str(database.reads("select data_id from alerts")))]
+            to_CRS = str(database.reads("select Address from WebsiteARV"))
+            logging.debug('the address started to be CRSed ' + to_CRS)
+            # data_id = database.reads("select data_id from alerts")
+            for id in data_id:
+                print("select Address from WebsiteARV where id = " + str(id))
+                search_sql = "select Address from WebsiteARV where id = " + \
+                    str(id)
+                address.append(database.reads(search_sql))
+            for addy in address:
+                try:
+                    crs.search(addy, 1)
+                except:
+                    print("CRS failed for: " + addy)
+                    logging.debug("CRS  failed for: " + addy)
+                    countue
+                print("CRS is complete for: " + addy)
+                logging.debug("CRS is complete for: " + addy)
+            for id in data_id:
+                del_sql = "delete from WebsiteARV where id = " + str(id)
+                database.execute(del_sql)
+        else:
+            time.sleep(60)
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    finally:
+        logging.debug('Alert stopped')
