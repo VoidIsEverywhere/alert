@@ -7,7 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from sshtunnel import SSHTunnelForwarder
 
-import webscrap
+from webscrap import scrapper
 
 
 def headless():
@@ -55,9 +55,10 @@ def search(entered_addresses, mode):
         database = DB("11$Tar11")
         if mode == 1:
             display = headless()
+        webscrap = scrapper()
         driver = webdriver.Chrome()
         driver.get("https://api-sabor.connectmls.com/sso/login")
-        webscrap.wait_for_element("//*[@id='j_username']", 15, driver)
+        webscrap.wait_for_element("//*[@id='j_username']", 5, driver)
         webscrap.click("//*[@id='j_username']", driver)
         webscrap.type("651941", "//*[@id='j_username']", driver)
         webscrap.click("//*[@id='j_password']", driver)
@@ -67,12 +68,12 @@ def search(entered_addresses, mode):
             "http://sabor.connectmls.com/ssologin.jsp?storefront=true")
         # driver.get("https://sabor.crsdata.com/integration/launchCRS.jsp")
         webscrap.wait_for_element(
-            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  15, driver)
+            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  5, driver)
         time.sleep(1)
         webscrap.click_thro(
             "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]", driver)
         webscrap.wait_for_element(
-            "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span",  15, driver)
+            "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span",  5, driver)
         webscrap.click_thro(
             "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span", driver)
         driver.close()
@@ -80,7 +81,7 @@ def search(entered_addresses, mode):
         webscrap.click_thro("//*[@id='secondTab']", driver)
         time.sleep(2)
         webscrap.wait_for_element(
-            "//*[@id='root']/main/main/div/section[2]/div[2]/div[1]/div[1]/div/span[1]/span[1]",  15, driver)
+            "//*[@id='root']/main/main/div/section[2]/div[2]/div[1]/div[1]/div/span[1]/span[1]",  5, driver)
         webscrap.click("//*[@id='root']/main/main/div/section[3]", driver)
         webscrap.type(entered_addresses,
                       "//*[@id='react-select-2-input']", driver)
