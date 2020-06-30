@@ -1,3 +1,4 @@
+import pickle
 import re
 import time
 
@@ -7,7 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from sshtunnel import SSHTunnelForwarder
 
-import webscrap
+from webscrap import scrapper
 
 
 def headless():
@@ -17,13 +18,24 @@ def headless():
 
 
 class DB:
-    def __init__(self, passwrd):
+    def __init__(self, passwrd, tunnel):
+        self.tunnel = tunnel
         self.passwrd = passwrd
+        server = SSHTunnelForwarder(
+            (tunnel, 90),
+            ssh_host_key=None,
+            ssh_username="void",
+            ssh_password=None,
+            ssh_private_key="/home/void/.ssh/id_rsa",
+            remote_bind_address=("127.0.0.1", 3306))
+        self.server = server
 
     def connect(self):
+        self.server.start()
         db = mysql.connector.connect(host='localhost',
                                      user='void',
                                      passwd=self.passwrd,
+                                     port=self.server.local_bind_port,
                                      db='Production')
         self.db = db
         mycursor = self.db.cursor()
@@ -50,37 +62,44 @@ class DB:
         self.db.commit()
 
 
+def cookie_load(driver):
+    driver.delete_all_cookies()
+    for cookie in pickle.load(open("cookies.pkl", "rb")):
+        if 'expiry' in cookie:
+            del cookie['expiry']
+        driver.add_cookie(cookie)
+
+
+def cookie_save(driver):
+    pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
+
+
 def search(entered_addresses, mode):
     try:
-        database = DB("11$Tar11")
+        database = DB("11$Tar11", "192.168.1.208")
         if mode == 1:
             display = headless()
+        webscrap = scrapper()
         driver = webdriver.Chrome()
-        driver.get("https://api-sabor.connectmls.com/sso/login")
-        webscrap.wait_for_element("//*[@id='j_username']", 15, driver)
-        webscrap.click("//*[@id='j_username']", driver)
-        webscrap.type("651941", "//*[@id='j_username']", driver)
-        webscrap.click("//*[@id='j_password']", driver)
-        webscrap.type("C00kie05", "//*[@id='j_password']", driver)
-        webscrap.click("//*[@name='go']", driver)
-        driver.get(
-            "http://sabor.connectmls.com/ssologin.jsp?storefront=true")
-        # driver.get("https://sabor.crsdata.com/integration/launchCRS.jsp")
+        driver.get("https://sabor2.connectmls.com/mls/home/home.jsp?freshLogin=true&ru=mls.jsp&doRegistration=1&uniqueURL=542169183&freshLogin=true&uniqueURL=10789407")
+        cookie_load(driver)
+        driver.get("https://sabor2.connectmls.com/mls/home/home.jsp?freshLogin=true&ru=mls.jsp&doRegistration=1&uniqueURL=542169183&freshLogin=true&uniqueURL=10789407")
         webscrap.wait_for_element(
-            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  15, driver)
+            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  5, driver)
         time.sleep(1)
         webscrap.click_thro(
             "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]", driver)
         webscrap.wait_for_element(
-            "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span",  15, driver)
+            "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span",  5, driver)
         webscrap.click_thro(
             "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span", driver)
         driver.close()
+        print(webscrap.get_text("//*", driver))
         driver.switch_to.window(driver.window_handles[0])
         webscrap.click_thro("//*[@id='secondTab']", driver)
         time.sleep(2)
         webscrap.wait_for_element(
-            "//*[@id='root']/main/main/div/section[2]/div[2]/div[1]/div[1]/div/span[1]/span[1]",  15, driver)
+            "//*[@id='root']/main/main/div/section[2]/div[2]/div[1]/div[1]/div/span[1]/span[1]",  5, driver)
         webscrap.click("//*[@id='root']/main/main/div/section[3]", driver)
         webscrap.type(entered_addresses,
                       "//*[@id='react-select-2-input']", driver)
@@ -111,6 +130,8 @@ def search(entered_addresses, mode):
             "//*[@id='Main_PropertyInfoMain_locationSection']/div/table/tbody/tr[1]/td[1]", driver))
         for l in zip_temp:
             zip += l
+        print(entered_addresses, bath_room, br, sqaurefeet,
+              yearbuilt, subdivision, fname, lname, zip)
         try:
             database.connect()
         except mysql.connector.errors.InterfaceError:
@@ -131,7 +152,7 @@ def search(entered_addresses, mode):
 
 def main():
     entered_addresses = input("What address do you want search crs for. ")
-    mode = input("press 1 for headless anything else for head.")
+    mode = int(input("press 1 for headless anything else for head."))
     entered_addresses, bath_room, br, sqaurefeet, yearbuilt, subdivision, fname, lname, zip = search(
         entered_addresses, mode)
     return(entered_addresses, bath_room, br, sqaurefeet, yearbuilt, subdivision, fname, lname, zip)

@@ -3,6 +3,7 @@ import re
 import time
 
 import mysql.connector
+from sshtunnel import SSHTunnelForwarder
 
 import crs
 
@@ -16,14 +17,24 @@ def convertTuple(tup):
 
 
 class DB:
-    def __init__(self):
-        pass
+    def __init__(self, passwrd, tunnel):
+        self.tunnel = tunnel
+        self.passwrd = passwrd
+        server = SSHTunnelForwarder(
+            (tunnel, 90),
+            ssh_host_key=None,
+            ssh_username="void",
+            ssh_password=None,
+            ssh_private_key="/home/void/.ssh/id_rsa",
+            remote_bind_address=("127.0.0.1", 3306))
+        self.server = server
 
     def connect(self):
-
+        self.server.start()
         db = mysql.connector.connect(host='localhost',
                                      user='void',
-                                     passwd="11$Tar11",
+                                     passwd=self.passwrd,
+                                     port=self.server.local_bind_port,
                                      db='Production')
         self.db = db
         mycursor = self.db.cursor()
@@ -35,7 +46,7 @@ class DB:
     def read(self, sql):
         self.mycursor.execute(sql)
         myresult = self.mycursor.fetchone()
-        return myresult[0]
+        return myresult
 
     def reads(self, sql):
         self.mycursor.execute(sql)
@@ -71,13 +82,14 @@ def main():
             # data_id = database.reads("select data_id from alerts")
             for id in data_id:
                 print("select Address from WebsiteARV where id = " + str(id))
-                search_sql = "select Address from WebsiteARV where id = " + \
-                    str(id)
-                addy = convertTuple(database.reads(search_sql)[0])
+                addy = (database.read(
+                    "select Address from WebsiteARV where id = " + str(id))[0])
                 logging.debug('the address returned is: ' + addy)
                 address.append(addy)
+            print(address)
             for addy in address:
                 try:
+                    logging.debug('the address CRSed is: ' + addy)
                     crs.search(addy, 1)
                 except:
                     print("CRS failed for: " + addy)
@@ -86,7 +98,7 @@ def main():
                 print("CRS is complete for: " + addy)
                 logging.debug("CRS is complete for: " + addy)
             for id in data_id:
-                del_sql = "delete from WebsiteARV where id = " + str(id)
+                del_sql = "delete from alerts where id = " + str(id)
                 database.execute(del_sql)
         else:
             time.sleep(60)
