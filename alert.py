@@ -59,7 +59,7 @@ class DB:
 
 
 def main():
-    database = DB()
+    database = DB("11$Tar11", "192.168.1.208")
     database.connect()
     # for potenal muilt threading for when i need to check muiltpule tables at once
     # sql = "select min(date) from alerts;"
@@ -74,7 +74,6 @@ def main():
         # print("select Address from WebsiteARV where id = " + str(id))
         # sql = "select table_name, data_id, date from alerts where$
         if num_alert >= 1:
-            a_string = str(database.reads("select data_id from alerts"))
             data_id = [int(x) for x in re.findall(
                 '\d+', str(database.reads("select data_id from alerts")))]
             to_CRS = str(database.reads("select Address from WebsiteARV"))

@@ -81,11 +81,17 @@ def search(entered_addresses, mode):
             display = headless()
         webscrap = scrapper()
         driver = webdriver.Chrome()
-        driver.get("https://sabor2.connectmls.com/mls/home/home.jsp?freshLogin=true&ru=mls.jsp&doRegistration=1&uniqueURL=542169183&freshLogin=true&uniqueURL=10789407")
-        cookie_load(driver)
-        driver.get("https://sabor2.connectmls.com/mls/home/home.jsp?freshLogin=true&ru=mls.jsp&doRegistration=1&uniqueURL=542169183&freshLogin=true&uniqueURL=10789407")
+        driver.get("https://api-sabor.connectmls.com/sso/login")
+        webscrap.wait_for_element("//*[@id='j_username']", 15, driver)
+        webscrap.click("//*[@id='j_username']", driver)
+        webscrap.type("651941", "//*[@id='j_username']", driver)
+        webscrap.click("//*[@id='j_password']", driver)
+        webscrap.type("C00kie05", "//*[@id='j_password']", driver)
+        webscrap.click("//*[@name='go']", driver)
+        driver.get(
+            "http://sabor.connectmls.com/ssologin.jsp?storefront=true")
         webscrap.wait_for_element(
-            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  5, driver)
+            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  30, driver)
         time.sleep(1)
         webscrap.click_thro(
             "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]", driver)
@@ -94,7 +100,6 @@ def search(entered_addresses, mode):
         webscrap.click_thro(
             "//*[@id='dcModal']/div/div/div[2]/div/div/div[1]/div[11]/a/span", driver)
         driver.close()
-        print(webscrap.get_text("//*", driver))
         driver.switch_to.window(driver.window_handles[0])
         webscrap.click_thro("//*[@id='secondTab']", driver)
         time.sleep(2)
