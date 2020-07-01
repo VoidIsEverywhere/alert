@@ -3,6 +3,7 @@ import re
 import time
 
 import mysql.connector
+from sshtunnel import SSHTunnelForwarder
 
 import crs
 
@@ -44,6 +45,8 @@ class DB:
     def execute(self, sql):
         self.mycursor.execute(sql)
         self.db.commit()
+        myresult = self.mycursor.fetchone()
+        return myresult
 
 
 def main():
@@ -53,41 +56,38 @@ def main():
     # sql = "select min(date) from alerts;"
     # time_of_last_check = database.read(sql)
     # sql = "select * from alerts where date > " + str(time_of_last_check) + ";"
-    # sql = "select  data_id from alerts"
+    # sql = "select  data_d_id from alerts"
     while True:
         table_name = []
-        address = []
-        success_crs = []
         num_alert = database.read(
             "select count(*) from alerts;")[0]
         # for potenal muilt threading for when i need to check muiltpule tables at once
-        # print("select Address from WebsiteARV where id = " + str(id))
-        # sql = "select table_name, data_id, date from alerts where$
+        # print("select Address from WebsiteARV where d_id = " + str(d_id))
+        # sql = "select table_name, data_d_id, date from alerts where$
+        print(num_alert)
         if num_alert >= 1:
-            data_id = [int(x) for x in re.findall(
-                '\d+', str(database.reads("select data_id from alerts")))]
+            # d_id, a_id = [int(x) for x in re.findall(
+            #     '\d+', str(database.reads("select data_id, id from alerts")))]
+            d_id, a_id = database.read("select data_id, id from alerts")
             to_CRS = str(database.reads("select Address from WebsiteARV"))
             logging.debug('the address started to be CRSed ' + to_CRS)
-            # data_id = database.reads("select data_id from alerts")
-            for id in data_id:
-                print("select Address from WebsiteARV where id = " + str(id))
-                addy = (database.read(
-                    "select Address from WebsiteARV where id = " + str(id))[0])
-                logging.debug('the address returned is: ' + addy)
-                address.append(addy)
-            for addy in address:
-                try:
-                    logging.debug('the address CRSed is: ' + addy)
-                    crs.search(addy, 1)
-                except:
-                    print("CRS failed for: " + addy)
-                    logging.debug("CRS  failed for: " + addy)
-                    continue
-                print("CRS is complete for: " + addy)
-                logging.debug("CRS is complete for: " + addy)
-            for id in data_id:
-                del_sql = "delete from alerts where id = " + str(id)
-                database.execute(del_sql)
+            # data_d_id = database.reads("select data_d_id from alerts")
+            print("select Address from WebsiteARV where id = " + str(d_id))
+            addy = (database.read(
+                "select Address from WebsiteARV where id = " + str(d_id))[0])
+            logging.debug('the address returned is: ' + addy)
+            print(addy)
+            try:
+                logging.debug('the address CRSed is: ' + addy)
+                crs.search(addy, 1)
+            except:
+                print("CRS failed for: " + addy)
+                logging.debug("CRS  failed for: " + addy)
+                continue
+            print("CRS is complete for: " + addy)
+            logging.debug("CRS is complete for: " + addy)
+            del_sql = "delete from alerts where id = " + str(a_id)
+            database.execute(del_sql)
         else:
             time.sleep(60)
 

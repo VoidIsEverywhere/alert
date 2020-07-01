@@ -1,3 +1,4 @@
+import pickle
 import re
 import time
 
@@ -50,6 +51,18 @@ class DB:
         self.db.commit()
 
 
+def cookie_load(driver):
+    driver.delete_all_cookies()
+    for cookie in pickle.load(open("cookies.pkl", "rb")):
+        # if 'expiry' in cookie:
+        #     del cookie['expiry']
+        driver.add_cookie(cookie)
+
+
+def cookie_save(driver):
+    pickle.dump(driver.get_cookies(), open("cookies.pkl", "wb"))
+
+
 def search(entered_addresses, mode):
     try:
         database = DB("11$Tar11")
@@ -58,7 +71,7 @@ def search(entered_addresses, mode):
         webscrap = scrapper()
         driver = webdriver.Chrome()
         driver.get("https://api-sabor.connectmls.com/sso/login")
-        webscrap.wait_for_element("//*[@id='j_username']", 5, driver)
+        webscrap.wait_for_element("//*[@id='j_username']", 15, driver)
         webscrap.click("//*[@id='j_username']", driver)
         webscrap.type("651941", "//*[@id='j_username']", driver)
         webscrap.click("//*[@id='j_password']", driver)
@@ -66,9 +79,8 @@ def search(entered_addresses, mode):
         webscrap.click("//*[@name='go']", driver)
         driver.get(
             "http://sabor.connectmls.com/ssologin.jsp?storefront=true")
-        # driver.get("https://sabor.crsdata.com/integration/launchCRS.jsp")
         webscrap.wait_for_element(
-            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  5, driver)
+            "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]",  30, driver)
         time.sleep(1)
         webscrap.click_thro(
             "//*[@id='header']/div/div[2]/div[3]/div[1]/a[7]", driver)
@@ -112,6 +124,8 @@ def search(entered_addresses, mode):
             "//*[@id='Main_PropertyInfoMain_locationSection']/div/table/tbody/tr[1]/td[1]", driver))
         for l in zip_temp:
             zip += l
+        print(entered_addresses, bath_room, br, sqaurefeet,
+              yearbuilt, subdivision, fname, lname, zip)
         try:
             database.connect()
         except mysql.connector.errors.InterfaceError:
@@ -132,7 +146,7 @@ def search(entered_addresses, mode):
 
 def main():
     entered_addresses = input("What address do you want search crs for. ")
-    mode = input("press 1 for headless anything else for head.")
+    mode = int(input("press 1 for headless anything else for head."))
     entered_addresses, bath_room, br, sqaurefeet, yearbuilt, subdivision, fname, lname, zip = search(
         entered_addresses, mode)
     return(entered_addresses, bath_room, br, sqaurefeet, yearbuilt, subdivision, fname, lname, zip)
